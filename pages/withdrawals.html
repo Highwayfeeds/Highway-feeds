@@ -136,7 +136,16 @@
       <div class="modal-actions"><button class="btn btn-primary" id="lowBalanceDismiss">Got it</button></div>
     </div>
   </div>
-
+<!-- Mobile floating menu -->
+<button class="mc-menu-btn" id="mcMenuBtn" aria-label="Open menu" aria-expanded="false">☰</button>
+<div class="mc-menu-backdrop" id="mcMenuBackdrop"></div>
+<nav class="mc-menu-panel" id="mcMenuPanel" aria-label="Mobile navigation">
+  <a href="pos.html"><span class="mc-menu-icon">🛒</span> Sell</a>
+  <a href="reports.html"><span class="mc-menu-icon">📊</span> Reports</a>
+  <a href="withdrawals.html"><span class="mc-menu-icon">💳</span> Deposit/Withdraw</a>
+  <a href="credit.html"><span class="mc-menu-icon">🤝</span> Credit</a>
+  <a href="manager.html" class="manager-only hidden"><span class="mc-menu-icon">📦</span> Inventory</a>
+</nav>
   <div class="toast-stack" id="toastStack"></div>
 
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>

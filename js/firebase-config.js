@@ -25,6 +25,6 @@ db.enablePersistence({ synchronizeTabs: true }).catch((err) => {
 });
 
 const FIXED_EMAILS = {
-  seller: "seller@mistycode.local",
-  manager: "manager@mistycode.local",
+  seller: "Highwayfeeds@gmail.com",
+  manager: "Highwayfeeds@gmail.com",
 };

@@ -35,9 +35,24 @@ function fetchUserRole(uid) {
 }
 
 function requireAuth(allowedRoles) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+
+    const timeoutId = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      console.error("Auth check timed out.");
+      sessionStorage.setItem("mc_login_error", "Sign-in check timed out. Please try signing in again.");
+      window.location.href = pathToIndex();
+      reject(new Error("Auth check timed out."));
+    }, 15000);
+
     const unsub = auth.onAuthStateChanged(async (user) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeoutId);
       unsub();
+
       if (!user) {
         window.location.href = pathToIndex();
         return;

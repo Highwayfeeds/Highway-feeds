@@ -1,10 +1,12 @@
 /* ==========================================================================
    INDEX.CSS — Sign-in page (3D Ocean theme)
    --------------------------------------------------------------------------
-   Concept: the whole sign-in experience lives inside a floating glass cube
-   submerged in deep ocean. The cube follows the cursor with a subtle 3D
-   tilt; inner layers parallax at different depths. Everything is driven by
-   CSS custom properties (--mx, --my, --rx, --ry) set from index.js.
+   Mobile-first safe:
+     • Page scrolls normally on small screens (no overflow lock).
+     • 3D tilt / parallax only active on hover-capable pointers (real mice).
+     • Heavy backdrop-filter reduced on mobile.
+     • Every decorative layer is pointer-events:none and aria-hidden.
+     • Respects prefers-reduced-motion.
    ========================================================================== */
 
 .hidden { display: none !important; }
@@ -13,18 +15,25 @@
    1. OCEAN BACKDROP
    ========================================================================== */
 
+html {
+  /* Prevents iOS Safari from auto-zooming form fields */
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   min-height: 100vh;
-  overflow: hidden;
+  min-height: 100dvh; /* dynamic viewport — handles mobile browser chrome */
+  margin: 0;
   background:
     radial-gradient(ellipse at 50% -20%, rgba(90, 180, 220, 0.35) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 120%, rgba(20, 70, 110, 0.55) 0%, transparent 60%),
     linear-gradient(180deg, #0a2436 0%, #0d3a52 35%, #0b2c40 70%, #061a26 100%);
-  perspective: 1400px;
-  perspective-origin: 50% 40%;
+  background-attachment: fixed; /* keeps gradient stable while scrolling on mobile */
+  overflow-x: hidden;
+  /* NOTE: no overflow:hidden on y — phones must be able to scroll */
 }
 
-/* Caustic light rays — soft, animated, purely decorative */
+/* Caustic light rays — desktop only (too costly on mobile GPUs) */
 body::before {
   content: "";
   position: fixed;
@@ -36,6 +45,7 @@ body::before {
     conic-gradient(from 260deg at 78% 0%, transparent 0deg, rgba(140, 210, 240, 0.07) 7deg, transparent 18deg);
   animation: caustics-drift 18s ease-in-out infinite alternate;
   z-index: 0;
+  display: none; /* enabled below on fine pointers */
 }
 
 @keyframes caustics-drift {
@@ -74,14 +84,15 @@ body::after {
   border: 1px solid rgba(190, 235, 255, 0.25);
   animation: bubble-rise linear infinite;
   opacity: 0;
+  will-change: transform, opacity;
 }
 
 @keyframes bubble-rise {
   0%   { transform: translateY(0) translateX(0) scale(0.6); opacity: 0; }
   10%  { opacity: 0.9; }
-  50%  { transform: translateY(-55vh) translateX(18px) scale(1); }
+  50%  { transform: translateY(-55vh) translateX(var(--drift, 18px)) scale(1); }
   90%  { opacity: 0.7; }
-  100% { transform: translateY(-115vh) translateX(-12px) scale(1.15); opacity: 0; }
+  100% { transform: translateY(-115vh) translateX(calc(var(--drift, 18px) * -0.6)) scale(1.15); opacity: 0; }
 }
 
 /* ==========================================================================
@@ -92,19 +103,33 @@ body::after {
   position: relative;
   z-index: 3;
   min-height: 100vh;
+  min-height: 100dvh;
   display: grid;
   grid-template-columns: 1.05fr 1fr;
   margin: 0 auto;
   max-width: 1180px;
   padding: clamp(16px, 3vw, 40px);
-  transform-style: preserve-3d;
-  /* Driven by index.js: --rx/--ry = tilt, --mx/--my = parallax shift */
-  transform:
-    rotateX(calc(var(--ry, 0) * 1deg))
-    rotateY(calc(var(--rx, 0) * 1deg))
-    translate3d(calc(var(--mx, 0) * 1px), calc(var(--my, 0) * 1px), 0);
-  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
-  will-change: transform;
+  align-items: center;
+  /* Tilt/parallax variables default to zero so it looks identical with no JS */
+  --rx: 0;
+  --ry: 0;
+  --mx: 0;
+  --my: 0;
+}
+
+/* Tilt only when we know the device has a real pointer */
+@media (hover: hover) and (pointer: fine) {
+  .login-shell {
+    transform-style: preserve-3d;
+    transform:
+      rotateX(calc(var(--ry) * 1deg))
+      rotateY(calc(var(--rx) * 1deg))
+      translate3d(calc(var(--mx) * 1px), calc(var(--my) * 1px), 0);
+    transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+
+  body::before { display: block; }
 }
 
 /* Glassy cube container */
@@ -124,7 +149,6 @@ body::after {
     0 0 60px rgba(90, 180, 220, 0.18);
   backdrop-filter: blur(18px) saturate(140%);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
-  transform-style: preserve-3d;
 }
 
 /* Top glass sheen */
@@ -159,7 +183,7 @@ body::after {
 
 .login-brand {
   position: relative;
-  padding: clamp(24px, 4vw, 52px);
+  padding: clamp(20px, 4vw, 52px);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -168,9 +192,13 @@ body::after {
   background:
     radial-gradient(ellipse at 20% 0%, rgba(90, 200, 240, 0.22), transparent 55%),
     linear-gradient(165deg, rgba(27, 73, 101, 0.55) 0%, rgba(10, 40, 60, 0.4) 100%);
-  /* Parallax layer — shifts subtly against the pointer */
-  transform: translate3d(calc(var(--mx, 0) * 0.35px), calc(var(--my, 0) * 0.35px), 30px);
   transition: transform 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-brand {
+    transform: translate3d(calc(var(--mx) * 0.35px), calc(var(--my) * 0.35px), 30px);
+  }
 }
 
 .login-brand::after {
@@ -181,7 +209,11 @@ body::after {
   background: linear-gradient(to bottom, transparent, rgba(160, 220, 245, 0.35), transparent);
 }
 
-.login-brand .logo { transform: translateZ(45px); }
+@media (hover: hover) and (pointer: fine) {
+  .login-brand .logo      { transform: translateZ(45px); }
+  .login-brand-copy       { transform: translateZ(30px); }
+  .login-brand-foot       { transform: translateZ(20px); }
+}
 
 .login-brand .logo-badge {
   background: linear-gradient(135deg, #f0cd6e, #d4a62a);
@@ -191,13 +223,10 @@ body::after {
 
 .login-brand .logo-name { color: #fff; }
 
-.login-brand-copy {
-  max-width: 480px;
-  transform: translateZ(30px);
-}
+.login-brand-copy { max-width: 480px; }
 
 .login-brand-copy h1 {
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
   line-height: 1.12;
   margin-bottom: var(--space-md);
   letter-spacing: -0.02em;
@@ -220,7 +249,6 @@ body::after {
   color: rgba(200, 230, 245, 0.5);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transform: translateZ(20px);
 }
 
 /* ==========================================================================
@@ -237,14 +265,20 @@ body::after {
   background:
     radial-gradient(ellipse at 80% 100%, rgba(30, 90, 130, 0.28), transparent 60%),
     rgba(6, 22, 33, 0.28);
-  transform: translate3d(calc(var(--mx, 0) * -0.2px), calc(var(--my, 0) * -0.2px), 15px);
+  gap: var(--space-lg);
   transition: transform 200ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-panel {
+    transform: translate3d(calc(var(--mx) * -0.2px), calc(var(--my) * -0.2px), 15px);
+  }
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  padding: clamp(24px, 3vw, 36px);
+  padding: clamp(22px, 3vw, 36px);
   border-radius: 20px;
   position: relative;
   background: linear-gradient(160deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.04) 100%);
@@ -255,8 +289,11 @@ body::after {
     0 0 40px rgba(80, 170, 210, 0.1);
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
-  transform: translateZ(50px);
   transition: transform 220ms ease-out;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .login-card { transform: translateZ(50px); }
 }
 
 .login-card h2 {
@@ -290,6 +327,7 @@ body::after {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
   transition: border-color 160ms ease, background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
@@ -307,11 +345,15 @@ body::after {
   border-color: rgba(150, 225, 255, 0.6);
   background: rgba(120, 200, 235, 0.1);
   box-shadow: 0 6px 22px rgba(0, 30, 50, 0.4), 0 0 0 1px rgba(150, 225, 255, 0.15) inset;
-  transform: translateY(-2px);
 }
 
-.role-btn:hover::before { opacity: 1; }
-.role-btn:active { transform: translateY(0) scale(0.99); }
+/* Hover lift only on devices that actually hover */
+@media (hover: hover) and (pointer: fine) {
+  .role-btn:hover { transform: translateY(-2px); }
+  .role-btn:hover::before { opacity: 1; }
+}
+
+.role-btn:active { transform: scale(0.99); }
 
 .role-btn-icon {
   font-size: 1.4rem;
@@ -324,7 +366,7 @@ body::after {
   box-shadow: 0 0 18px rgba(90, 180, 220, 0.15) inset;
 }
 
-.role-btn-text { display: flex; flex-direction: column; gap: 2px; }
+.role-btn-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .role-btn-title { font-weight: var(--font-weight-semibold); color: #f2fafd; }
 .role-btn-desc { font-size: var(--font-size-xs); color: rgba(190, 225, 240, 0.6); }
 
@@ -340,6 +382,8 @@ body::after {
   color: #eaf6fc;
   padding: 11px 13px;
   border-radius: var(--radius-sm);
+  /* 16px font prevents iOS Safari auto-zoom on focus */
+  font-size: 16px;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
@@ -369,6 +413,7 @@ body::after {
   text-align: left;
   width: fit-content;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: color 160ms ease;
 }
 
@@ -383,18 +428,23 @@ body::after {
   border: 1px solid rgba(160, 225, 250, 0.35);
   border-radius: var(--radius-md);
   font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
   letter-spacing: 0.01em;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   box-shadow: 0 6px 20px rgba(30, 110, 160, 0.45), 0 1px 0 rgba(255, 255, 255, 0.25) inset;
   transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
 }
 
-.login-submit:hover {
-  filter: brightness(1.1);
-  box-shadow: 0 10px 28px rgba(40, 140, 200, 0.55), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
-  transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+  .login-submit:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 10px 28px rgba(40, 140, 200, 0.55), 0 1px 0 rgba(255, 255, 255, 0.3) inset;
+    transform: translateY(-1px);
+  }
 }
 
-.login-submit:active { transform: translateY(0) scale(0.99); }
+.login-submit:active { transform: scale(0.99); }
 .login-submit:disabled { opacity: 0.6; cursor: not-allowed; filter: grayscale(0.3); }
 
 .forgot-link { align-self: center; margin-top: var(--space-2xs); }
@@ -414,7 +464,7 @@ body::after {
 .forgot-icon { font-size: 2.5rem; margin-bottom: var(--space-md); }
 .forgot-confirm h2 { margin-bottom: var(--space-xs); }
 .forgot-confirm .login-sub { margin-bottom: var(--space-lg); }
-.forgot-confirm .login-sub strong { color: #9fe0ff; }
+.forgot-confirm .login-sub strong { color: #9fe0ff; word-break: break-all; }
 .forgot-confirm .btn { width: 100%; }
 
 .forgot-confirm .btn-outline {
@@ -432,12 +482,11 @@ body::after {
 /* ----- Connection badge ----- */
 
 .login-panel .conn-badge {
-  position: absolute;
-  bottom: var(--space-lg);
   background: rgba(4, 22, 32, 0.6);
   border: 1px solid rgba(120, 210, 240, 0.25);
   color: #9fe0ff;
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .login-panel .conn-badge .dot { box-shadow: 0 0 8px currentColor; }
@@ -454,7 +503,7 @@ body::after {
 
 .password-wrap input {
   width: 100%;
-  padding-right: 46px; /* room for the eye button */
+  padding-right: 48px; /* room for the eye button */
 }
 
 .password-toggle {
@@ -462,8 +511,8 @@ body::after {
   right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -472,6 +521,7 @@ body::after {
   border-radius: var(--radius-sm);
   color: rgba(180, 220, 240, 0.65);
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition: color 150ms ease, background 150ms ease;
 }
 
@@ -492,12 +542,10 @@ body::after {
   pointer-events: none;
 }
 
-/* Eye icon: two states, swap visibility via .is-visible on the toggle */
 .password-toggle .icon-eye-off { display: none; }
 .password-toggle.is-visible .icon-eye     { display: none; }
 .password-toggle.is-visible .icon-eye-off { display: block; }
 
-/* Show-password checkbox row */
 .show-password-row {
   display: flex;
   align-items: center;
@@ -506,13 +554,15 @@ body::after {
   font-size: var(--font-size-xs);
   color: rgba(190, 225, 240, 0.7);
   user-select: none;
+  -webkit-user-select: none;
+  cursor: pointer;
 }
 
 .show-password-row input[type="checkbox"] {
   appearance: none;
   -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 4px;
   border: 1px solid rgba(140, 205, 235, 0.45);
   background: rgba(4, 18, 28, 0.5);
@@ -525,8 +575,8 @@ body::after {
 
 .show-password-row input[type="checkbox"]::before {
   content: "";
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   transform: scale(0);
   transition: transform 120ms ease;
   background: #9fe0ff;
@@ -544,8 +594,6 @@ body::after {
   outline: none;
   box-shadow: 0 0 0 2px rgba(120, 200, 235, 0.5);
 }
-
-.show-password-row label { cursor: pointer; }
 
 /* ==========================================================================
    7. FLOATING DECORATIVE ORBS (parallax depth layer)
@@ -587,6 +635,7 @@ body::after {
   border-left: 4px solid #5a9bc9;
   color: #e6f4fb;
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: 0 12px 30px rgba(0, 10, 20, 0.6);
 }
 
@@ -595,21 +644,26 @@ body::after {
 .toast-stack .toast-danger  { border-left-color: #e2685a; }
 
 /* ==========================================================================
-   9. RESPONSIVE
+   9. RESPONSIVE — phones & tablets
    ========================================================================== */
 
+/* Tablets: drop to single column, relax the heavy blur */
 @media (max-width: 900px) {
-  body { overflow-y: auto; }
-
   .login-shell {
     grid-template-columns: 1fr;
     padding: 14px;
-    min-height: 100vh;
-    /* Disable tilt on touch so it doesn't fight scrolling */
+    min-height: auto;
+    padding-top: 24px;
+    padding-bottom: 24px;
     transform: none !important;
   }
 
-  .login-cube { grid-template-columns: 1fr; border-radius: 22px; }
+  .login-cube {
+    grid-template-columns: 1fr;
+    border-radius: 22px;
+    backdrop-filter: blur(12px) saturate(130%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
+  }
 
   .login-brand {
     padding: var(--space-xl) var(--space-lg);
@@ -620,25 +674,146 @@ body::after {
   }
 
   .login-brand-copy h1 { font-size: var(--font-size-xl); }
-  .login-brand-copy p { display: none; }
   .login-brand::after { display: none; }
 
-  .login-panel { transform: none !important; padding: var(--space-lg); }
+  .login-panel {
+    transform: none !important;
+    padding: var(--space-lg);
+  }
 
-  .login-card { transform: none !important; backdrop-filter: blur(14px); }
+  .login-card {
+    transform: none !important;
+    max-width: 460px;
+  }
 
-  .login-panel .conn-badge { position: static; margin-top: var(--space-md); }
+  .login-panel .conn-badge { position: static; margin-top: var(--space-md); align-self: center; }
 
   .ocean-orbs i:nth-child(4) { display: none; }
 }
+
+/* Phones: tighter spacing, hide non-essential brand copy, reduce decor */
+@media (max-width: 600px) {
+  .login-shell {
+    padding: 10px;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  .login-cube {
+    border-radius: 18px;
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    box-shadow:
+      0 20px 40px -12px rgba(0, 8, 15, 0.75),
+      0 1px 0 rgba(255, 255, 255, 0.18) inset,
+      0 0 40px rgba(90, 180, 220, 0.14);
+  }
+
+  .login-brand {
+    padding: var(--space-lg) var(--space-md);
+    gap: var(--space-md);
+  }
+
+  .login-brand .logo { gap: var(--space-xs); }
+  .login-brand .logo-badge { width: 36px; height: 36px; font-size: var(--font-size-xs); }
+  .login-brand .logo-name  { font-size: var(--font-size-base); }
+
+  .login-brand-copy h1 {
+    font-size: 1.35rem;
+    margin-bottom: var(--space-xs);
+  }
+
+  .login-brand-copy p { display: none; } /* hide paragraph on small phones */
+  .login-brand-foot   { font-size: 10px; }
+
+  .login-panel { padding: var(--space-md); gap: var(--space-md); }
+
+  .login-card {
+    padding: var(--space-lg) var(--space-md);
+    border-radius: 16px;
+    backdrop-filter: blur(14px) saturate(130%);
+    -webkit-backdrop-filter: blur(14px) saturate(130%);
+  }
+
+  .login-card h2 { font-size: var(--font-size-md); }
+  .login-sub    { margin-bottom: var(--space-md); font-size: var(--font-size-xs); }
+
+  .role-btn { padding: var(--space-sm) var(--space-md); gap: var(--space-sm); }
+  .role-btn-icon { width: 40px; height: 40px; font-size: 1.2rem; }
+  .role-btn-title { font-size: var(--font-size-sm); }
+  .role-btn-desc  { font-size: 11px; }
+
+  .login-form { gap: var(--space-sm); }
+  .login-submit { padding: 12px; }
+
+  .forgot-confirm h2 { font-size: var(--font-size-md); }
+  .forgot-icon { font-size: 2rem; margin-bottom: var(--space-sm); }
+
+  /* Lighter decor on phones */
+  .ocean-orbs i:nth-child(2),
+  .ocean-orbs i:nth-child(4) { display: none; }
+  .ocean-orbs i:nth-child(1) { width: 60px; height: 60px; opacity: 0.5; }
+  .ocean-orbs i:nth-child(3) { width: 40px; height: 40px; opacity: 0.5; }
+  .ocean-orbs i:nth-child(5) { width: 34px; height: 34px; opacity: 0.5; }
+
+  /* Toasts stack nearer the edges on small screens */
+  .toast-stack { left: var(--space-sm); right: var(--space-sm); bottom: var(--space-md); }
+  .toast-stack .toast { min-width: 0; max-width: none; }
+}
+
+/* Very small phones (iPhone SE width and under) */
+@media (max-width: 380px) {
+  .login-card { padding: var(--space-md); }
+  .login-card h2 { font-size: var(--font-size-base); }
+  .role-btn { padding: var(--space-xs) var(--space-sm); }
+}
+
+/* ==========================================================================
+   10. LANDSCAPE PHONES — keep the cube from stretching weirdly
+   ========================================================================== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .login-shell {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .login-brand { padding: var(--space-md) var(--space-lg); }
+
+  .login-brand-copy h1 {
+    font-size: 1.25rem;
+    margin-bottom: var(--space-2xs);
+  }
+
+  .login-brand-copy p { display: none; }
+  .login-brand-foot   { font-size: 10px; }
+
+  .login-panel { padding: var(--space-md); }
+  .login-card  { padding: var(--space-md); }
+  .login-card h2 { font-size: var(--font-size-base); }
+  .login-sub    { margin-bottom: var(--space-sm); }
+  .role-btn     { padding: var(--space-xs) var(--space-sm); }
+  .role-btn-icon { width: 36px; height: 36px; font-size: 1rem; }
+}
+
+/* ==========================================================================
+   11. REDUCED MOTION — kill all non-essential animation
+   ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
   .login-shell,
   .login-brand,
   .login-panel,
-  .login-card { transform: none !important; transition: none !important; }
+  .login-card {
+    transform: none !important;
+    transition: none !important;
+  }
 
   body::before,
   .ocean-bubbles span,
-  .ocean-orbs i { animation: none !important; }
+  .ocean-orbs i {
+    animation: none !important;
+  }
+
+  .ocean-bubbles { display: none; }
 }

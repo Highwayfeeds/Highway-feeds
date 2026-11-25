@@ -19,77 +19,119 @@
     })();
   </script>
 
+  <!-- ============================================================
+       NEW: decorative ocean layers (bubbles injected by index.js,
+       orbs are pure CSS). aria-hidden so screen readers skip them.
+       ============================================================ -->
+  <div class="ocean-orbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="ocean-bubbles" id="oceanBubbles" aria-hidden="true"></div>
+
   <div class="login-shell">
-    <div class="login-brand">
-      <div class="logo anim-logo-in" id="brandLogo">
-        <span class="logo-badge" id="logoBadge">MC</span>
-        <span class="logo-name" id="logoName" style="color:#fff;">Misty Code</span>
-      </div>
-      <div class="login-brand-copy">
-        <h1>Run your counter, not your paperwork.</h1>
-        <p>Sell, track stock, and see your numbers — from one till or a hundred, online wherever you are.</p>
-      </div>
-      <div class="login-brand-foot">Powered by Misty Code</div>
-    </div>
+    <!-- NEW: glass cube wrapper around brand + panel -->
+    <div class="login-cube">
 
-    <div class="login-panel">
-      <div class="login-card card anim-page-in">
-        <div id="roleChoice" class="role-choice">
-          <h2>Sign in</h2>
-          <p class="login-sub">Choose how you're signing in today.</p>
-
-          <button class="role-btn" data-role="seller" type="button">
-            <span class="role-btn-icon" aria-hidden="true">🧾</span>
-            <span class="role-btn-text">
-              <span class="role-btn-title">Seller</span>
-              <span class="role-btn-desc">Sell products and view reports</span>
-            </span>
-          </button>
-
-          <button class="role-btn" data-role="manager" type="button">
-            <span class="role-btn-icon" aria-hidden="true">📦</span>
-            <span class="role-btn-text">
-              <span class="role-btn-title">Manager</span>
-              <span class="role-btn-desc">Full access — inventory, stock, settings</span>
-            </span>
-          </button>
+      <div class="login-brand">
+        <div class="logo anim-logo-in" id="brandLogo">
+          <span class="logo-badge" id="logoBadge">MC</span>
+          <span class="logo-name" id="logoName" style="color:#fff;">Misty Code</span>
         </div>
+        <div class="login-brand-copy">
+          <h1>Run your counter, not your paperwork.</h1>
+          <p>Sell, track stock, and see your numbers — from one till or a hundred, online wherever you are.</p>
+        </div>
+        <div class="login-brand-foot">Powered by Misty Code</div>
+      </div>
 
-        <form id="loginForm" class="login-form hidden" novalidate>
-          <button type="button" id="backToRoles" class="back-link">← Back</button>
-          <h2 id="loginTitle">Seller sign in</h2>
-          <p class="login-sub" id="loginSub">Enter your password to continue.</p>
+      <div class="login-panel">
+        <div class="login-card card anim-page-in">
+          <div id="roleChoice" class="role-choice">
+            <h2>Sign in</h2>
+            <p class="login-sub">Choose how you're signing in today.</p>
 
-          <div class="field">
-            <label for="emailInput">Email</label>
-            <input type="email" id="emailInput" autocomplete="username" readonly />
-            <span class="hint" id="emailHint">Fixed for this account. Contact the manager if this needs to change.</span>
+            <button class="role-btn" data-role="seller" type="button">
+              <span class="role-btn-icon" aria-hidden="true">🧾</span>
+              <span class="role-btn-text">
+                <span class="role-btn-title">Seller</span>
+                <span class="role-btn-desc">Sell products and view reports</span>
+              </span>
+            </button>
+
+            <button class="role-btn" data-role="manager" type="button">
+              <span class="role-btn-icon" aria-hidden="true">📦</span>
+              <span class="role-btn-text">
+                <span class="role-btn-title">Manager</span>
+                <span class="role-btn-desc">Full access — inventory, stock, settings</span>
+              </span>
+            </button>
           </div>
 
-          <div class="field">
-            <label for="passwordInput">Password</label>
-            <input type="password" id="passwordInput" autocomplete="current-password" required />
+          <form id="loginForm" class="login-form hidden" novalidate>
+            <button type="button" id="backToRoles" class="back-link">← Back</button>
+            <h2 id="loginTitle">Seller sign in</h2>
+            <p class="login-sub" id="loginSub">Enter your password to continue.</p>
+
+            <div class="field">
+              <label for="emailInput">Email</label>
+              <input type="email" id="emailInput" autocomplete="username" readonly />
+              <span class="hint" id="emailHint">Fixed for this account. Contact the manager if this needs to change.</span>
+            </div>
+
+            <!-- ============================================================
+                 UPDATED: password field with eye toggle + show-password
+                 checkbox. Same input id="passwordInput" so existing JS
+                 keeps working unchanged.
+                 ============================================================ -->
+            <div class="field">
+              <label for="passwordInput">Password</label>
+              <div class="password-wrap">
+                <input type="password" id="passwordInput" autocomplete="current-password" required />
+                <button
+                  type="button"
+                  id="togglePasswordBtn"
+                  class="password-toggle"
+                  aria-label="Show password"
+                  aria-pressed="false"
+                  title="Show password"
+                >
+                  <svg class="icon-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                    <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+              <label class="show-password-row" for="showPasswordCheck">
+                <input type="checkbox" id="showPasswordCheck" />
+                <span>Show password</span>
+              </label>
+            </div>
+
+            <div id="loginError" class="login-error hidden" role="alert"></div>
+
+            <button type="submit" class="btn btn-primary login-submit" id="loginSubmitBtn">Sign in</button>
+            <button type="button" id="forgotPasswordBtn" class="forgot-link">Forgot password?</button>
+          </form>
+
+          <div id="forgotConfirm" class="forgot-confirm hidden">
+            <div class="forgot-icon" aria-hidden="true">✉️</div>
+            <h2>Check your email</h2>
+            <p class="login-sub">We've sent a password reset link to <strong id="forgotEmailShown"></strong>. Follow the link to set a new password, then come back here to sign in.</p>
+            <button type="button" id="forgotBackBtn" class="btn btn-outline">Back to sign in</button>
           </div>
+        </div>
 
-          <div id="loginError" class="login-error hidden" role="alert"></div>
-
-          <button type="submit" class="btn btn-primary login-submit" id="loginSubmitBtn">Sign in</button>
-          <button type="button" id="forgotPasswordBtn" class="forgot-link">Forgot password?</button>
-        </form>
-
-        <div id="forgotConfirm" class="forgot-confirm hidden">
-          <div class="forgot-icon" aria-hidden="true">✉️</div>
-          <h2>Check your email</h2>
-          <p class="login-sub">We've sent a password reset link to <strong id="forgotEmailShown"></strong>. Follow the link to set a new password, then come back here to sign in.</p>
-          <button type="button" id="forgotBackBtn" class="btn btn-outline">Back to sign in</button>
+        <div class="conn-badge conn-online" id="connBadge">
+          <span class="dot"></span>
+          <span id="connText">Online</span>
         </div>
       </div>
 
-      <div class="conn-badge conn-online" id="connBadge">
-        <span class="dot"></span>
-        <span id="connText">Online</span>
-      </div>
-    </div>
+    </div><!-- /.login-cube -->
   </div>
 
   <div class="toast-stack" id="toastStack"></div>
@@ -105,9 +147,5 @@
   <script src="js/particles.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/index.js"></script>
-
-    <!-- Decorative ocean layers -->
-  <div class="ocean-orbs" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-  <div class="ocean-bubbles" id="oceanBubbles" aria-hidden="true"></div>
 </body>
 </html>
